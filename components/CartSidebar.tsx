@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { X, Trash2, Send, MapPin, Calendar, Phone, User, ShoppingBag, Mail, CreditCard, Clock, Info } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Trash2, Send, MapPin, Calendar, Phone, User, ShoppingBag, Mail, CreditCard, Clock, Info, AlertCircle } from 'lucide-react';
 import { CartItem, UserDetails } from '../types';
 import { locations } from '../data';
 
@@ -10,6 +10,13 @@ interface CartSidebarProps {
   onRemoveItem: (index: number) => void;
   onUpdateQuantity: (index: number, newQty: number) => void;
 }
+
+// Fixed holidays for 2025/2026 to keep it lightweight without external libraries
+const HOLIDAYS = [
+  "1.1.", "1.5.", "8.5.", "5.7.", "6.7.", "28.9.", "28.10.", "17.11.", "24.12.", "25.12.", "26.12.", // Fixed
+  "18.4.2025", "21.4.2025", // Easter 2025
+  "3.4.2026", "6.4.2026"    // Easter 2026
+];
 
 const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose, cart, onRemoveItem, onUpdateQuantity }) => {
   const [formData, setFormData] = useState<UserDetails>({
@@ -22,12 +29,80 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose, cart, onRemo
     paymentMethod: 'hotove'
   });
 
+  const [dateError, setDateError] = useState<string | null>(null);
+
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
   const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const selectedLocation = locations.find(l => l.id === formData.pickupLocationId) || locations[0];
 
+  // Calculate min date (Today + 3 days)
+  const getMinDate = () => {
+    const d = new Date();
+    d.setDate(d.getDate() + 3);
+    return d.toISOString().split('T')[0];
+  };
+
+  const validateDate = (dateStr: string, locationId: string): string | null => {
+    if (!dateStr) return null;
+
+    const date = new Date(dateStr);
+    const dayOfWeek = date.getDay(); // 0 = Sunday
+    const day = date.getDate();
+    const month = date.getMonth() + 1;
+    const year = date.getFullYear();
+    const formattedDate = `${day}.${month}.`;
+    const fullDate = `${day}.${month}.${year}`;
+
+    // 1. Check Holidays
+    if (HOLIDAYS.includes(formattedDate) || HOLIDAYS.includes(fullDate)) {
+      return "Ve státní svátky máme zavřeno.";
+    }
+
+    // 2. Check Location Opening Days
+    const loc = locations.find(l => l.id === locationId);
+    if (loc && !loc.allowedDays.includes(dayOfWeek)) {
+      return "V tento den má vybraná pobočka zavřeno.";
+    }
+
+    return null;
+  };
+
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newDate = e.target.value;
+    const error = validateDate(newDate, formData.pickupLocationId);
+    
+    if (error) {
+      setDateError(error);
+      setFormData({ ...formData, pickupDate: '' }); // Clear invalid date
+    } else {
+      setDateError(null);
+      setFormData({ ...formData, pickupDate: newDate });
+    }
+  };
+
+  const handleLocationChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newLocationId = e.target.value;
+    setFormData({ ...formData, pickupLocationId: newLocationId });
+
+    // Re-validate date when location changes
+    if (formData.pickupDate) {
+      const error = validateDate(formData.pickupDate, newLocationId);
+      if (error) {
+        setDateError(error);
+        setFormData(prev => ({ ...prev, pickupLocationId: newLocationId, pickupDate: '' }));
+      } else {
+        setDateError(null);
+      }
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (dateError || !formData.pickupDate) {
+      alert("Prosím vyberte platné datum vyzvednutí.");
+      return;
+    }
 
     const subject = `Objednávka zákusků - ${formData.firstName} ${formData.lastName}`;
     
@@ -212,7 +287,7 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose, cart, onRemo
                   <select
                     className="w-full p-2 border border-stone-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-200 focus:border-brand-400 outline-none bg-white mb-2"
                     value={formData.pickupLocationId}
-                    onChange={e => setFormData({...formData, pickupLocationId: e.target.value})}
+                    onChange={handleLocationChange}
                   >
                     {locations.map(loc => (
                       <option key={loc.id} value={loc.id}>{loc.name} ({loc.address})</option>
@@ -220,7 +295,7 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose, cart, onRemo
                   </select>
                   
                   {/* Location Details Info Box */}
-                  <div className="bg-white border border-stone-200 rounded-lg p-3 text-sm text-stone-600">
+                  <div className="bg-white border border-stone-200 rounded-lg p-3 text-sm text-stone-600 shadow-sm">
                     <p className="font-bold text-stone-800">{selectedLocation.name}</p>
                     <p>{selectedLocation.address}</p>
                     <p className="text-brand-700 font-medium mt-1">Tel: {selectedLocation.phone}</p>
@@ -234,17 +309,24 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose, cart, onRemo
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-stone-500 mb-1 uppercase tracking-wider">Datum vyzvednutí *</label>
+                  <label className="block text-xs font-bold text-stone-500 mb-1 uppercase tracking-wider">Datum vyzvednutí (min. 3 dny předem) *</label>
                   <div className="relative">
                     <Calendar size={14} className="absolute left-3 top-3 text-stone-400" />
                     <input
                       required
                       type="date"
-                      className="w-full pl-9 pr-3 py-2 border border-stone-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-200 focus:border-brand-400 outline-none"
+                      min={getMinDate()}
+                      className={`w-full pl-9 pr-3 py-2 border rounded-lg text-sm focus:ring-2 outline-none ${dateError ? 'border-red-500 focus:ring-red-200' : 'border-stone-300 focus:ring-brand-200 focus:border-brand-400'}`}
                       value={formData.pickupDate}
-                      onChange={e => setFormData({...formData, pickupDate: e.target.value})}
+                      onChange={handleDateChange}
                     />
                   </div>
+                  {dateError && (
+                    <div className="flex items-center gap-1.5 mt-2 text-red-600 text-xs animate-pulse">
+                      <AlertCircle size={14} />
+                      <span>{dateError}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div>
@@ -288,7 +370,8 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose, cart, onRemo
 
               <button
                 type="submit"
-                className="w-full bg-brand-600 hover:bg-brand-800 text-white font-bold py-4 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 mt-4 transform active:scale-[0.98]"
+                disabled={!!dateError}
+                className={`w-full font-bold py-4 px-4 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 mt-4 transform active:scale-[0.98] ${dateError ? 'bg-stone-300 text-stone-500 cursor-not-allowed' : 'bg-brand-600 hover:bg-brand-800 text-white hover:shadow-xl'}`}
               >
                 <Send size={20} />
                 <span>Odeslat závaznou objednávku</span>

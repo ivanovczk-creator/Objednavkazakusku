@@ -26,4 +26,5 @@ export interface LocationInfo {
   address: string;
   phone: string;
   hours: string[];
+  allowedDays: number[]; // 0 = Neděle, 1 = Pondělí, ... 6 = Sobota
 }
