@@ -11,10 +11,15 @@ const App: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showNotification, setShowNotification] = useState(false);
 
-  // Filter products based on search AND visibility
-  const filteredProducts = products.filter(p => 
-    p.visible && p.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filter products based on search AND visibility, THEN sort by priority
+  const filteredProducts = products
+    .filter(p => p.visible && p.name.toLowerCase().includes(searchTerm.toLowerCase()))
+    .sort((a, b) => {
+      // Default priority is 100 if not specified
+      const p1 = a.priority !== undefined ? a.priority : 100;
+      const p2 = b.priority !== undefined ? b.priority : 100;
+      return p1 - p2;
+    });
 
   const addToCart = (product: Product, quantity: number) => {
     setCart(prev => {

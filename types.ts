@@ -3,6 +3,7 @@ export interface Product {
   img: string;
   price: number;
   visible: boolean; // Umožňuje skrýt produkt bez smazání z kódu
+  priority?: number; // Čím menší číslo, tím výše se produkt zobrazí (např. 1 = první)
 }
 
 export interface CartItem extends Product {
