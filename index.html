@@ -1,42 +1,34 @@
 <!DOCTYPE html>
 <html lang="cs">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Cukrářství Blahutovi - Objednávka</title>
+    
+    <!-- KNIHOVNY -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Používáme specifickou verzi lucide-react pro stabilitu -->
+    <script src="https://unpkg.com/lucide-react@0.344.0/dist/umd/lucide-react.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    
+    <!-- DESIGN KONFIGURACE -->
     <script>
       tailwind.config = {
         theme: {
           extend: {
-            fontFamily: {
-              sans: ['Inter', 'sans-serif'],
-              serif: ['Playfair Display', 'serif'],
-            },
+            fontFamily: { sans: ['Inter', 'sans-serif'], serif: ['Playfair Display', 'serif'] },
             colors: {
-              brand: {
-                50: '#fdf2f8', // Very light pink
-                100: '#fce7f3',
-                200: '#fbcfe8',
-                300: '#f9a8d4',
-                400: '#f472b6',
-                500: '#ec4899',
-                800: '#9d174d',
-                900: '#831843',
-              },
-              cream: {
-                50: '#fffbf0',
-                100: '#fef3c7',
-                200: '#fde68a',
-                900: '#451a03', // Dark brown for text
-              }
+              brand: { 50: '#fdf2f8', 100: '#fce7f3', 200: '#fbcfe8', 300: '#f9a8d4', 400: '#f472b6', 500: '#ec4899', 600: '#db2777', 700: '#be185d', 800: '#9d174d', 900: '#831843' },
+              cream: { 50: '#fffbf0', 100: '#fef3c7', 200: '#fde68a', 900: '#451a03' }
             }
           }
         }
       }
     </script>
-  <script type="importmap">
+<script type="importmap">
 {
   "imports": {
     "react": "https://aistudiocdn.com/react@^19.2.0",
@@ -48,8 +40,436 @@
 </script>
 <link rel="stylesheet" href="/index.css">
 </head>
-  <body class="bg-cream-50 text-cream-900 antialiased selection:bg-brand-200 selection:text-brand-900">
+<body class="bg-cream-50 text-cream-900 antialiased selection:bg-brand-200 selection:text-brand-900">
     <div id="root"></div>
-  <script type="module" src="/index.tsx"></script>
+
+    <script type="text/babel" data-presets="typescript,react">
+        
+        // ==========================================================================================
+        //  ZÓNA PRO ÚPRAVY (ZDE MĚŇTE CENY A PRODUKTY PRO WEBNODE)
+        // ==========================================================================================
+
+        // Zástupný obrázek
+        const PLACEHOLDER_IMG = "https://placehold.co/600x600/fdf2f8/9d174d?text=Foto+brzy+doplníme&font=roboto";
+
+        // SEZNAM PRODUKTŮ
+        // priority: 1 = PRVNÍ MÍSTO. Čím menší číslo, tím výše. (100 = výchozí/dole)
+        // visible: true = viditelné, false = skryté
+        
+        const productsData = [
+          // --- TOP PRODUKTY (Priority 1-10) ---
+          { name: "Karamelový větrník", priority: 1, price: 55, visible: true, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000271-4e0e94e0ec/55.jpeg?ph=cd4d5a01c0" }, 
+          { name: "Likérová špička", priority: 2, price: 45, visible: true, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000208-c8a13c8a14/01.jpeg?ph=cd4d5a01c0" },
+
+          // --- OSTATNÍ ZÁKUSKY (Priority 100) ---
+          { name: "Indián", priority: 100, price: 40, visible: true, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000218-b73a7b73aa/08.jpeg?ph=cd4d5a01c0" },
+          { name: "Jádrový rohlíček", priority: 100, price: 40, visible: true, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000312-9820398205/16.jpeg?ph=cd4d5a01c0" },
+          { name: "Kakaová kostka", priority: 100, price: 45, visible: true, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000216-5b4555b458/07.jpeg?ph=cd4d5a01c0" },
+          { name: "Čoko-malina řez", priority: 100, price: 50, visible: true, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000207-4a3fd4a3ff/24.jpeg?ph=cd4d5a01c0" }, 
+          { name: "Pařížský dort se šlehačkou", priority: 100, price: 50, visible: true, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000254-7f85e7f85f/41.jpeg?ph=cd4d5a01c0" }, 
+          { name: "Lanýžový dort", priority: 100, price: 45, visible: true, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000342-ef0c4ef0c7/53.jpeg?ph=cd4d5a01c0" },
+          { name: "Pařížská bomba", priority: 100, price: 50, visible: true, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000248-5c23c5c23e/37.jpeg?ph=cd4d5a01c0" },
+          { name: "Pařížská trubička", priority: 100, price: 40, visible: true, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000246-5959259593/35.jpeg?ph=cd4d5a01c0" },
+          { name: "Punčový řez", priority: 100, price: 45, visible: true, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000236-cb134cb136/27.jpeg?ph=cd4d5a01c0" },
+          { name: "Jablko s tvarohem a skořicí", priority: 100, price: 45, visible: true, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000235-6789167893/26.jpeg?ph=cd4d5a01c0" }, 
+          { name: "Mandarinkový řez se zakysanou smetanou", priority: 100, price: 45, visible: true, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000322-228f3228f5/23.jpeg?ph=cd4d5a01c0" }, 
+          { name: "Citrónový řez s ovocem", priority: 100, price: 50, visible: true, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000340-222f4222f6/52.jpeg?ph=cd4d5a01c0" }, 
+          { name: "Jahodový řez s jogurtem", priority: 100, price: 45, visible: true, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000318-cf381cf383/21.jpeg?ph=cd4d5a01c0" },
+          { name: "Višňový řez", priority: 100, price: 45, visible: true, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000316-2c2a02c2a3/20.jpeg?ph=cd4d5a01c0" },
+          { name: "Malinový řez", priority: 100, price: 50, visible: true, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000320-17bc717bc9/22.jpeg?ph=cd4d5a01c0" },
+          { name: "Toffi", priority: 100, price: 50, visible: true, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000332-6e2df6e2e1/40.jpeg?ph=cd4d5a01c0" },
+          { name: "Roláda marcipánová", priority: 100, price: 40, visible: true, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000247-f1a5af1a5d/36.jpeg?ph=cd4d5a01c0" }, 
+          { name: "Kokosová lahůdka", priority: 100, price: 45, visible: true, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000239-ab56aab56d/29.jpeg?ph=cd4d5a01c0" },
+          { name: "Laskonka", priority: 100, price: 40, visible: true, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000257-9673c9673e/44.jpeg?ph=cd4d5a01c0" },
+          { name: "Briketka", priority: 100, price: 45, visible: true, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000255-360de360e0/43.jpeg?ph=cd4d5a01c0" },
+          { name: "Dortička", priority: 100, price: 45, visible: true, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000304-9bb7d9bb7f/06.jpeg?ph=cd4d5a01c0" },
+          { name: "Pistáciové koule", priority: 100, price: 45, visible: true, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000220-b69a3b69a5/10.jpeg?ph=cd4d5a01c0" },
+          { name: "Metro", priority: 100, price: 45, visible: true, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000214-7eabe7eac0/05.jpeg?ph=cd4d5a01c0" },
+          { name: "Ovocný košíček", priority: 100, price: 45, visible: true, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000324-821c8821c9/31.jpeg?ph=cd4d5a01c0" }, 
+          { name: "Ovocný mix", priority: 100, price: 45, visible: true, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000245-d8367d8368/34.jpeg?ph=cd4d5a01c0" },
+          { name: "Ovocná miska", priority: 100, price: 55, visible: true, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000326-ed1e7ed1e8/32.jpeg?ph=cd4d5a01c0" },
+          { name: "Věneček s fondánem", priority: 100, price: 40, visible: true, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000256-837388373b/42.jpeg?ph=cd4d5a01c0" },
+          { name: "Věneček se šlehačkou", priority: 100, price: 45, visible: true, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000261-8528f85292/48.jpeg?ph=cd4d5a01c0" },
+          { name: "Banánek kávový se šlehačkou", priority: 100, price: 45, visible: true, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000263-6eb6a6eb6b/50.jpeg?ph=cd4d5a01c0" }, 
+          { name: "Linecké kolečko s marmeládou", priority: 100, price: 35, visible: true, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000336-1ea411ea42/46.jpeg?ph=cd4d5a01c0" }, 
+          { name: "Linecké třené", priority: 100, price: 35, visible: true, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000334-b47adb47af/45.jpeg?ph=cd4d5a01c0" },
+          { name: "Linecké s marcipánem", priority: 100, price: 45, visible: true, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000338-f41b0f41b2/47.jpeg?ph=cd4d5a01c0" },
+          { name: "Šodo se šlehačkou", priority: 100, price: 50, visible: true, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000244-86e8086e83/33.jpeg?ph=cd4d5a01c0" },
+          { name: "Nugátový dortík", priority: 100, price: 50, visible: true, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000211-be7ddbe7df/03.jpeg?ph=cd4d5a01c0" },
+          { name: "Dort rafaelo", priority: 100, price: 65, visible: true, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000228-bf2d2bf2d4/18.jpeg?ph=cd4d5a01c0" }, 
+          { name: "Panna cotta", priority: 100, price: 60, visible: true, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000302-b0ee0b0ee3/04.jpeg?ph=cd4d5a01c0" },
+          { name: "Karamelový řez mascarpone", priority: 100, price: 55, visible: true, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000285-8f3478f349/64.jpeg?ph=cd4d5a01c0" }, 
+          { name: "Craquelin", priority: 100, price: 65, visible: true, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000310-7ef3f7ef41/14.jpeg?ph=cd4d5a01c0" },
+          { name: "Čokoládový dortík", priority: 100, price: 50, visible: true, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000297-4e6864e689/70.jpeg?ph=cd4d5a01c0" },
+          { name: "Tartaletka karamelová", priority: 100, price: 50, visible: true, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000293-e9392e9395/68.jpeg?ph=cd4d5a01c0" },
+          { name: "Tartaletka srdíčko", priority: 100, price: 50, visible: true, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000276-1534b1534c/58.jpeg?ph=cd4d5a01c0" },
+          { name: "Tartaletka čokoládová", priority: 100, price: 50, visible: true, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000308-0c70b0c70c/12.jpeg?ph=cd4d5a01c0" },
+          { name: "Tartaletka višňová", priority: 100, price: 50, visible: true, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000222-a96f8a96fb/11.jpeg?ph=cd4d5a01c0" },
+          { name: "Nanuk-Mimion", priority: 100, price: 50, visible: true, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000283-c9da2c9da6/63.jpeg?ph=cd4d5a01c0" }, 
+          { name: "Borůvkový řez", priority: 100, price: 50, visible: true, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000289-dd755dd757/66.jpeg?ph=cd4d5a01c0" },
+          { name: "Mecháček s mascarpone", priority: 100, price: 65, visible: true, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000206-ac45bac45d/30.jpeg?ph=cd4d5a01c0" }, 
+          { name: "Pop-Cake", priority: 100, price: 40, visible: true, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000280-7385773859/61.jpeg?ph=cd4d5a01c0" },
+          { name: "Kávový řez", priority: 100, price: 45, visible: true, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000299-93d6293d64/71.jpeg?ph=cd4d5a01c0" },
+          { name: "Větrník pistáciový", priority: 100, price: 55, visible: true, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000306-cf743cf744/09.jpeg?ph=cd4d5a01c0" },
+          { name: "Sophia řez", priority: 100, price: 45, visible: true, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000270-cfd91cfd92/54.jpeg?ph=cd4d5a01c0" },
+          { name: "Tiramisu", priority: 100, price: 60, visible: true, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000226-7803f78042/15.jpeg?ph=cd4d5a01c0" },
+
+          // --- NOVÉ PRODUKTY (Nutno doplnit foto) ---
+          { name: "Tvarohový řez", priority: 100, price: 45, visible: true, img: PLACEHOLDER_IMG },
+          { name: "Mini zákusky", priority: 100, price: 30, visible: true, img: PLACEHOLDER_IMG },
+          { name: "Roláda celá mini", priority: 100, price: 200, visible: true, img: PLACEHOLDER_IMG },
+          { name: "Roláda celá", priority: 100, price: 390, visible: true, img: PLACEHOLDER_IMG },
+          { name: "Dortička s nápisem", priority: 100, price: 50, visible: true, img: PLACEHOLDER_IMG },
+          { name: "Linecké s mascarpone", priority: 100, price: 55, visible: true, img: PLACEHOLDER_IMG },
+          { name: "Rybízová miska", priority: 100, price: 50, visible: true, img: PLACEHOLDER_IMG },
+          { name: "Cupcake", priority: 100, price: 50, visible: true, img: PLACEHOLDER_IMG },
+          { name: "Černý rybíz", priority: 100, price: 50, visible: true, img: PLACEHOLDER_IMG },
+          { name: "Čoko višeň", priority: 100, price: 55, visible: true, img: PLACEHOLDER_IMG },
+          { name: "Red Velvet", priority: 100, price: 65, visible: true, img: PLACEHOLDER_IMG },
+          { name: "Dort Pavlova", priority: 100, price: 65, visible: true, img: PLACEHOLDER_IMG },
+          { name: "Pistáciový dortík", priority: 100, price: 70, visible: true, img: PLACEHOLDER_IMG },
+          { name: "Větrník malinový", priority: 100, price: 50, visible: true, img: PLACEHOLDER_IMG },
+          { name: "Větrník slaný karamel", priority: 100, price: 40, visible: true, img: PLACEHOLDER_IMG },
+          { name: "Sacher dort", priority: 100, price: 55, visible: true, img: PLACEHOLDER_IMG },
+          { name: "Miska jahodová", priority: 100, price: 60, visible: true, img: PLACEHOLDER_IMG },
+          { name: "Dubai", priority: 100, price: 95, visible: true, img: PLACEHOLDER_IMG },
+          { name: "Špička v kelímku", priority: 100, price: 65, visible: true, img: PLACEHOLDER_IMG },
+          { name: "Šodo čokoládové", priority: 100, price: 55, visible: true, img: PLACEHOLDER_IMG },
+          { name: "Čoko desert", priority: 100, price: 50, visible: true, img: PLACEHOLDER_IMG },
+          { name: "Brownies koule", priority: 100, price: 40, visible: true, img: PLACEHOLDER_IMG },
+          { name: "Mango-čokoláda", priority: 100, price: 60, visible: true, img: PLACEHOLDER_IMG },
+          { name: "Banánek mango", priority: 100, price: 65, visible: true, img: PLACEHOLDER_IMG },
+
+          // --- SKRYTÉ (visible: false) ---
+          { name: "Roláda Deluxe", priority: 100, price: 40, visible: false, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000344-9bd0c9bd0e/59.jpeg?ph=cd4d5a01c0" },
+          { name: "Višňový dort", priority: 100, price: 45, visible: false, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000346-46d0746d08/62.jpeg?ph=cd4d5a01c0" },
+          { name: "Ganážový dort", priority: 100, price: 45, visible: false, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000286-a4232a4235/65.jpeg?ph=cd4d5a01c0" },
+          { name: "Hruškový řez", priority: 100, price: 35, visible: false, img: "https://cd4d5a01c0.clvaw-cdnwnd.com/58d5d0a9c721038cb5ac69a3cbfdeae6/200000348-a111ca111d/72.jpeg?ph=cd4d5a01c0" }
+        ];
+
+        // KONFIGURACE POBOČEK
+        const allowedLocations = [
+          {
+            id: "petrvald",
+            name: "Cukrárna Petřvald",
+            address: "Šenovská 1, Petřvald",
+            phone: "778 157 857",
+            hours: ["Út - Ne: 9:00 - 17:00"],
+            allowedDays: [0, 2, 3, 4, 5, 6] // 0=Ne, 1=Po ... 6=So (Út-Ne)
+          },
+          {
+            id: "karvina",
+            name: "Cukrárna Karviná",
+            address: "Tř. Těreškovové 2233/28, Karviná",
+            phone: "778 157 867",
+            hours: ["Po - Pá: 9:00 - 17:00", "So: 9:00 - 12:00"],
+            allowedDays: [1, 2, 3, 4, 5, 6] // Po-So (bez Ne)
+          },
+          {
+            id: "ostrava",
+            name: "Cukrárna Ostrava - Zábřeh (Kotva)",
+            address: "Výškovická 116A, Ostrava Zábřeh",
+            phone: "775 271 101",
+            hours: ["Po - Pá: 9:00 - 17:00", "So: 9:00 - 12:00"],
+            allowedDays: [1, 2, 3, 4, 5, 6] // Po-So
+          },
+          {
+            id: "pist",
+            name: "Výrobna Píšť",
+            address: "Opavská 218/101, Píšť",
+            phone: "602 323 788",
+            hours: ["Po - Pá: 6:00 - 15:00"],
+            allowedDays: [1, 2, 3, 4, 5] // Po-Pá (bez víkendu)
+          }
+        ];
+
+        // SVÁTKY
+        const holidays = [
+          "1.1.", "1.5.", "8.5.", "5.7.", "6.7.", "28.9.", "28.10.", "17.11.", "24.12.", "25.12.", "26.12.",
+          "18.4.2025", "21.4.2025", "3.4.2026", "6.4.2026"
+        ];
+
+        // ==========================================================================================
+        //  KONEC ZÓNY PRO ÚPRAVY (DÁLE NESAHEJTE, POKUD NEJSTE PROGRAMÁTOR)
+        // ==========================================================================================
+
+        const { useState, useEffect } = React;
+        
+        // OPRAVA CHYBY #130: Správný název globální proměnné pro Lucide Icons je window.lucideReact (malé l)
+        const Icons = window.lucideReact || window.LucideReact;
+        
+        if (!Icons) {
+           console.error("Knihovna Lucide Icons nebyla načtena. Zkontrolujte připojení k internetu.");
+        }
+
+        const { 
+            ShoppingBasket, Plus, X, Trash2, Send, MapPin, 
+            Calendar, Phone, User, ShoppingBag, Mail, AlertCircle, 
+            Info, Search 
+        } = Icons || {};
+
+        const ProductCard = ({ product, onAddToCart }) => {
+          const [quantity, setQuantity] = useState(1);
+
+          const handleAdd = () => {
+            if (quantity > 0) {
+              onAddToCart(product, quantity);
+              setQuantity(1);
+            }
+          };
+
+          return (
+            <div className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden flex flex-col group border border-cream-100">
+              <div className="relative aspect-square overflow-hidden bg-cream-50">
+                <img
+                  src={product.img}
+                  alt={product.name}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  loading="lazy"
+                />
+              </div>
+              
+              <div className="p-4 flex flex-col flex-grow">
+                <h3 className="text-lg font-bold text-cream-900 mb-2 line-clamp-2 min-h-[3.5rem] font-serif tracking-wide">
+                  {product.name}
+                </h3>
+                <div className="mb-4 text-brand-800 font-bold text-lg">
+                  {product.price > 0 ? `${product.price} Kč` : 'Cena na vyžádání'}
+                </div>
+                <div className="mt-auto flex items-center gap-2">
+                  <div className="relative flex items-center">
+                    <input
+                      type="number"
+                      min="1"
+                      value={quantity}
+                      onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                      className="w-16 p-2 pl-3 border border-stone-200 rounded-lg text-center focus:ring-2 focus:ring-brand-300 focus:border-brand-300 outline-none text-stone-700 bg-stone-50"
+                    />
+                    <span className="absolute right-2 text-xs text-stone-400 pointer-events-none">ks</span>
+                  </div>
+                  <button onClick={handleAdd} className="flex-1 bg-brand-500 hover:bg-brand-800 text-white p-2 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-sm active:scale-95">
+                    {Plus && <Plus size={18} />} <span className="font-medium">Do košíku</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        };
+
+        const CartSidebar = ({ isOpen, onClose, cart, onRemoveItem, onUpdateQuantity }) => {
+          const [formData, setFormData] = useState({
+            firstName: '', lastName: '', phone: '', email: '',
+            pickupDate: '', pickupLocationId: allowedLocations[0].id, paymentMethod: 'hotove'
+          });
+          const [dateError, setDateError] = useState(null);
+
+          const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+          const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+          const selectedLocation = allowedLocations.find(l => l.id === formData.pickupLocationId) || allowedLocations[0];
+
+          const getMinDate = () => {
+            const d = new Date();
+            d.setDate(d.getDate() + 3);
+            return d.toISOString().split('T')[0];
+          };
+
+          const validateDate = (dateStr, locationId) => {
+            if (!dateStr) return null;
+            const date = new Date(dateStr);
+            const dayOfWeek = date.getDay();
+            const day = date.getDate();
+            const month = date.getMonth() + 1;
+            const year = date.getFullYear();
+            const formattedDate = `${day}.${month}.`;
+            const fullDate = `${day}.${month}.${year}`;
+
+            if (holidays.includes(formattedDate) || holidays.includes(fullDate)) return "Ve státní svátky máme zavřeno.";
+            const loc = allowedLocations.find(l => l.id === locationId);
+            if (loc && !loc.allowedDays.includes(dayOfWeek)) return "V tento den má vybraná pobočka zavřeno.";
+            return null;
+          };
+
+          const handleDateChange = (e) => {
+            const newDate = e.target.value;
+            const error = validateDate(newDate, formData.pickupLocationId);
+            setDateError(error);
+            setFormData({ ...formData, pickupDate: newDate });
+          };
+
+          const handleLocationChange = (e) => {
+            const newLocationId = e.target.value;
+            setFormData({ ...formData, pickupLocationId: newLocationId });
+            if (formData.pickupDate) {
+              const error = validateDate(formData.pickupDate, newLocationId);
+              setDateError(error);
+            }
+          };
+
+          const handleSubmit = (e) => {
+            e.preventDefault();
+            if (dateError || !formData.pickupDate) {
+              alert("Prosím vyberte platné datum vyzvednutí.");
+              return;
+            }
+            const subject = `Objednávka zákusků - ${formData.firstName} ${formData.lastName}`;
+            let body = `Dobrý den,%0D%0A%0D%0ARád(a) bych si u Vás objednal(a) následující zboží:%0D%0A--------------------------------------------------%0D%0A`;
+            cart.forEach(item => {
+              body += `- ${item.name}: ${item.quantity} ks (${item.price} Kč/ks) ... ${item.price * item.quantity} Kč%0D%0A`;
+            });
+            body += `--------------------------------------------------%0D%0ACELKEM KUSŮ: ${totalItems}%0D%0ACELKOVÁ CENA (orientační): ${totalPrice} Kč%0D%0A%0D%0APODROBNOSTI VYZVEDNUTÍ:%0D%0AMísto: ${selectedLocation.name} (${selectedLocation.address})%0D%0ADatum: ${formData.pickupDate}%0D%0APlatba: ${formData.paymentMethod === 'hotove' ? 'Při převzetí' : 'Převodem na účet'}%0D%0A%0D%0AKONTAKTNÍ ÚDAJE:%0D%0AJméno: ${formData.firstName} ${formData.lastName}%0D%0ATelefon: ${formData.phone}%0D%0AEmail: ${formData.email}%0D%0A`;
+            window.location.href = `mailto:info@cukrarstviblahutovi.cz?subject=${encodeURIComponent(subject)}&body=${body}`;
+          };
+
+          return (
+            <>
+              <div className={`fixed inset-0 bg-black/40 backdrop-blur-sm z-40 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={onClose} />
+              <div className={`fixed top-0 right-0 h-full w-full sm:w-[500px] bg-white z-50 shadow-2xl transform transition-transform duration-300 flex flex-col ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+                <div className="p-5 border-b border-stone-100 flex justify-between items-center bg-cream-50">
+                  <div className="flex items-center gap-3">
+                    {ShoppingBag && <ShoppingBag className="text-brand-800" />}
+                    <h2 className="text-xl font-serif font-bold text-cream-900">Váš košík</h2>
+                    <span className="bg-brand-100 text-brand-800 text-xs font-bold px-2 py-1 rounded-full">{totalItems} ks</span>
+                  </div>
+                  <button onClick={onClose} className="text-stone-400 hover:text-stone-800 transition-colors p-1 rounded-full hover:bg-stone-100">{X && <X size={24} />}</button>
+                </div>
+                <div className="flex-1 overflow-y-auto p-5 space-y-8">
+                  <div className="space-y-4">
+                    {cart.length === 0 ? <div className="text-center py-12 text-stone-400"><p>Váš košík je zatím prázdný.</p></div> : 
+                      cart.map((item, index) => (
+                        <div key={`${item.name}-${index}`} className="flex gap-4 items-start py-3 border-b border-dashed border-stone-200 last:border-0">
+                          <div className="w-16 h-16 rounded-md overflow-hidden flex-shrink-0 bg-stone-50 border border-stone-100"><img src={item.img} alt={item.name} className="w-full h-full object-cover" /></div>
+                          <div className="flex-1">
+                            <div className="flex justify-between items-start"><h4 className="font-semibold text-stone-800 text-sm mb-1">{item.name}</h4><span className="text-sm font-bold text-brand-800 whitespace-nowrap">{item.price * item.quantity} Kč</span></div>
+                            <div className="flex items-center justify-between mt-2">
+                              <div className="flex items-center border border-stone-200 rounded-md">
+                                <button onClick={() => onUpdateQuantity(index, item.quantity - 1)} className="px-2 py-1 hover:bg-stone-50 text-stone-500 disabled:opacity-50" disabled={item.quantity <= 1}>-</button>
+                                <span className="w-8 text-center text-sm font-medium">{item.quantity}</span>
+                                <button onClick={() => onUpdateQuantity(index, item.quantity + 1)} className="px-2 py-1 hover:bg-stone-50 text-stone-500">+</button>
+                              </div>
+                              <button onClick={() => onRemoveItem(index)} className="text-rose-400 hover:text-rose-600 text-xs underline decoration-rose-200 hover:decoration-rose-400">Odebrat</button>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    }
+                  </div>
+                  {cart.length > 0 && (
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                      <div className="bg-brand-50 p-4 rounded-xl border border-brand-100 flex justify-between items-center"><span className="font-serif font-bold text-lg text-cream-900">Celkem k úhradě:</span><span className="text-2xl font-bold text-brand-700">{totalPrice} Kč</span></div>
+                      <div className="space-y-4 bg-stone-50 p-5 rounded-xl border border-stone-100">
+                        <h3 className="font-serif font-bold text-lg text-cream-900 border-b border-stone-200 pb-2 flex items-center gap-2">{User && <User size={18} />} Osobní údaje</h3>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div><label className="block text-xs font-bold text-stone-500 mb-1 uppercase tracking-wider">Jméno *</label><input required type="text" className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm outline-none" value={formData.firstName} onChange={e => setFormData({...formData, firstName: e.target.value})} /></div>
+                          <div><label className="block text-xs font-bold text-stone-500 mb-1 uppercase tracking-wider">Příjmení *</label><input required type="text" className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm outline-none" value={formData.lastName} onChange={e => setFormData({...formData, lastName: e.target.value})} /></div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div><label className="block text-xs font-bold text-stone-500 mb-1 uppercase tracking-wider">Telefon *</label><input required type="tel" className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm outline-none" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} /></div>
+                          <div><label className="block text-xs font-bold text-stone-500 mb-1 uppercase tracking-wider">E-mail *</label><input required type="email" className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm outline-none" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} /></div>
+                        </div>
+                      </div>
+                      <div className="space-y-4 bg-stone-50 p-5 rounded-xl border border-stone-100">
+                        <h3 className="font-serif font-bold text-lg text-cream-900 border-b border-stone-200 pb-2 flex items-center gap-2">{MapPin && <MapPin size={18} />} Vyzvednutí a platba</h3>
+                        <div>
+                          <label className="block text-xs font-bold text-stone-500 mb-1 uppercase tracking-wider">Místo vyzvednutí *</label>
+                          <select className="w-full p-2 border border-stone-300 rounded-lg text-sm bg-white mb-2" value={formData.pickupLocationId} onChange={handleLocationChange}>
+                            {allowedLocations.map(loc => <option key={loc.id} value={loc.id}>{loc.name} ({loc.address})</option>)}
+                          </select>
+                          <div className="bg-white border border-stone-200 rounded-lg p-3 text-sm text-stone-600 shadow-sm">
+                            <p className="font-bold text-stone-800">{selectedLocation.name}</p>
+                            <p>{selectedLocation.address}</p>
+                            <div className="mt-2 border-t border-stone-100 pt-2"><p className="text-xs font-bold text-stone-400 uppercase">Otevírací doba:</p>{selectedLocation.hours.map((h, i) => <p key={i} className="text-xs">{h}</p>)}</div>
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-stone-500 mb-1 uppercase tracking-wider">Datum vyzvednutí (min. 3 dny předem) *</label>
+                          <input required type="date" min={getMinDate()} className={`w-full px-3 py-2 border rounded-lg text-sm outline-none ${dateError ? 'border-red-500' : 'border-stone-300'}`} value={formData.pickupDate} onChange={handleDateChange} />
+                          {dateError && <div className="flex items-center gap-1.5 mt-2 text-red-600 text-xs animate-pulse">{AlertCircle && <AlertCircle size={14} />}<span>{dateError}</span></div>}
+                        </div>
+                        <div>
+                           <label className="block text-xs font-bold text-stone-500 mb-2 uppercase tracking-wider">Způsob platby *</label>
+                           <div className="grid grid-cols-2 gap-3">
+                             <label className={`flex items-center gap-2 p-3 border rounded-lg cursor-pointer ${formData.paymentMethod === 'hotove' ? 'border-brand-500 bg-brand-50' : 'border-stone-200'}`}><input type="radio" name="payment" value="hotove" checked={formData.paymentMethod === 'hotove'} onChange={() => setFormData({...formData, paymentMethod: 'hotove'})} /><span className="text-sm font-medium">Při převzetí</span></label>
+                             <label className={`flex items-center gap-2 p-3 border rounded-lg cursor-pointer ${formData.paymentMethod === 'prevod' ? 'border-brand-500 bg-brand-50' : 'border-stone-200'}`}><input type="radio" name="payment" value="prevod" checked={formData.paymentMethod === 'prevod'} onChange={() => setFormData({...formData, paymentMethod: 'prevod'})} /><span className="text-sm font-medium">Převodem</span></label>
+                           </div>
+                        </div>
+                      </div>
+                      <div className="flex gap-3 bg-blue-50 p-4 rounded-lg text-xs text-blue-800 border border-blue-100 items-start">{Info && <Info size={16} className="flex-shrink-0 mt-0.5" />}<p>Odesláním objednávky berete na vědomí, že fotografie jsou pouze ilustrační. Pokud nebude některý z vybraných výrobků k dispozici, budeme vás neprodleně informovat.</p></div>
+                      <button type="submit" disabled={!!dateError} className={`w-full font-bold py-4 px-4 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 mt-4 active:scale-[0.98] ${dateError ? 'bg-stone-300 text-stone-500 cursor-not-allowed' : 'bg-brand-600 hover:bg-brand-800 text-white'}`}>{Send && <Send size={20} />}<span>Odeslat závaznou objednávku</span></button>
+                    </form>
+                  )}
+                </div>
+              </div>
+            </>
+          );
+        };
+
+        const App = () => {
+          const [cart, setCart] = useState([]);
+          const [isCartOpen, setIsCartOpen] = useState(false);
+          const [searchTerm, setSearchTerm] = useState('');
+          const [showNotification, setShowNotification] = useState(false);
+
+          const filteredProducts = productsData
+            .filter(p => p.visible && p.name.toLowerCase().includes(searchTerm.toLowerCase()))
+            .sort((a, b) => (a.priority || 100) - (b.priority || 100));
+
+          const addToCart = (product, quantity) => {
+            setCart(prev => {
+              const existing = prev.find(item => item.name === product.name);
+              if (existing) {
+                return prev.map(item => item.name === product.name ? { ...item, quantity: item.quantity + quantity } : item);
+              }
+              return [...prev, { ...product, quantity }];
+            });
+            setShowNotification(true);
+            setTimeout(() => setShowNotification(false), 2000);
+          };
+
+          const removeFromCart = (index) => setCart(prev => prev.filter((_, i) => i !== index));
+          const updateQuantity = (index, newQty) => newQty >= 1 && setCart(prev => prev.map((item, i) => i === index ? { ...item, quantity: newQty } : item));
+
+          return (
+            <div className="min-h-screen bg-cream-50 flex flex-col font-sans text-stone-800">
+              <nav className="bg-white/90 backdrop-blur-md shadow-sm border-b border-stone-100">
+                <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+                  <div className="flex flex-col">
+                    <h1 className="font-serif text-2xl md:text-3xl font-bold text-brand-800 tracking-tight">Cukrářství Blahutovi</h1>
+                    <p className="text-xs text-stone-500 hidden sm:block">Tradiční receptury, poctivé suroviny</p>
+                  </div>
+                  <button onClick={() => setIsCartOpen(true)} className="relative p-3 rounded-full hover:bg-stone-50 transition-colors group">
+                    {ShoppingBasket && <ShoppingBasket className="text-stone-700 group-hover:text-brand-600 transition-colors" size={28} />}
+                    {cart.reduce((a, b) => a + b.quantity, 0) > 0 && <span className="absolute top-1 right-1 bg-brand-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[1.2rem] text-center shadow-sm animate-bounce">{cart.reduce((a, b) => a + b.quantity, 0)}</span>}
+                  </button>
+                </div>
+              </nav>
+              <div className="bg-brand-50 border-b border-brand-100/50">
+                <div className="container mx-auto px-4 py-12 text-center">
+                  <h2 className="text-4xl font-serif font-bold text-cream-900 mb-6">Naše nabídka zákusků</h2>
+                  <div className="max-w-md mx-auto relative">
+                    {Search && <Search className="absolute left-3 top-3.5 text-stone-400" size={20} />}
+                    <input type="text" placeholder="Hledat zákusek..." className="w-full pl-10 pr-4 py-3 rounded-full border border-brand-200 focus:ring-4 focus:ring-brand-100 outline-none" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                  </div>
+                </div>
+              </div>
+              <main className="container mx-auto px-4 py-12 flex-grow">
+                {filteredProducts.length === 0 ? <div className="text-center py-12 text-stone-500"><p>Nenašli jsme žádné zákusky.</p></div> : 
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                    {filteredProducts.map(product => <ProductCard key={product.name} product={product} onAddToCart={addToCart} />)}
+                  </div>
+                }
+              </main>
+              <footer className="bg-cream-900 text-cream-100 py-12 mt-auto">
+                <div className="container mx-auto px-4 text-center text-xs opacity-50">© {new Date().getFullYear()} Cukrářství Blahutovi.</div>
+              </footer>
+              <CartSidebar isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} cart={cart} onRemoveItem={removeFromCart} onUpdateQuantity={updateQuantity} />
+              <div className={`fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-stone-800 text-white px-6 py-3 rounded-full shadow-lg transition-all duration-300 z-50 flex items-center gap-2 ${showNotification ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0 pointer-events-none'}`}>{ShoppingBasket && <ShoppingBasket size={18} className="text-brand-300" />}<span className="font-medium">Přidáno do košíku</span></div>
+            </div>
+          );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+<script type="module" src="/index.tsx"></script>
 </body>
 </html>
